@@ -4,7 +4,7 @@ This Integration for Opencast is a further development of https://weblog.lkiesow
 
 - BigBlueButton 2.2.X is supported (21.04.2020)
 - Screenshare supported (21.04.2020)
-- Whiteboard supported (21.04.2020)
+- Whiteboard partially supported (21.04.2020)
 
 ## Bugs
 
