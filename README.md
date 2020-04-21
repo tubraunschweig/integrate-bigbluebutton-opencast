@@ -22,6 +22,7 @@ This Integration for Opencast is a further development of https://weblog.lkiesow
 2. ffmpeg compiled with libx264 support (included)
 3. Installed and configured BigBlueButton Server (2.2.X)
 4. Your BigBlueButton creates MP4 Videos
+5. A lot of Diskspace for temporary files
 
 ## Installation
 
