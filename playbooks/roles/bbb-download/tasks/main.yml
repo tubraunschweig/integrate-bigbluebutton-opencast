@@ -1,0 +1,41 @@
+---
+
+- name: Install dependencies
+  apt:
+    name: python, python-pip, python-numpy, python-lxml, python-bs4, python-beautifulsoup, curl, libsdl2-mixer-2.0-0, libsdl2-image-2.0-0, libsdl2-2.0-0, libva-x11-1, libva-drm1, libfdk-aac-dev, cpulimit
+    state: present
+
+- pip:
+    name: ffmpeg
+
+- name: ensure documentroot exists
+  file:
+    path: /opt/ffmpeg
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: copy ffmpeg folder
+  copy:
+    src: "ffmpeg"
+    dest: "/opt/ffmpeg"
+    mode: 0755
+
+- name: copy files
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: 0644
+  with_items:
+    - { src: "ffmpeg.py" , dest: "/usr/local/bigbluebutton/core/scripts/post_publish/ffmpeg.py" }
+    - { src: "download.py" , dest: "/usr/local/bigbluebutton/core/scripts/post_publish/download.py" }
+    - { src: "download_control.rb" , dest: "/usr/local/bigbluebutton/core/scripts/post_publish/download_control.rb" }
+
+- name: ensure documentroot exists
+  file:
+    path: /var/log/bigbluebutton/download
+    state: directory
+    owner: bigbluebutton
+    group: bigbluebutton
+    mode: 0775
