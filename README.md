@@ -11,7 +11,7 @@ This Integration for Opencast is a further development of https://weblog.lkiesow
 (Still room for improvement)
 
 - The time of the last Whiteboard Slide is longer than the Actual Recording pause time.
-- The Ansbile Roles takes to runs to work
+- The Ansbile Role takes two runs to work
 - On the Whiteboard Recording, Text Blocks will not appear.
 
 ## Requirements
