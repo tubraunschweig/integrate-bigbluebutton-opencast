@@ -140,24 +140,7 @@ def create_drawing(dims,result):
                       bild.update({ draw['shape'] : '' })
 
                 if before != bild:
-                  if duration>0.1:
-                    write_svg_file = temp_dir + "draw_" + str(time) + "1.svg"
-                    write_svg = open(write_svg_file, 'a+')
-                    write_svg.write("<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' version='1.1' width='" + str(img['width']) + "' height='" + str(img['height']) + "'>")
-                    if len(before) >= 1:
-                      for k, v in before.items():
-                        if v and k != 'cursor':
-                          write_svg.write(v)
-                    if 'cursor' in before:
-                        write_svg.write("<circle r='8' cx='" + str(int(img['width'])*float(before['cursor']['x'])) + "' cy='" + str(int(img['height'])*float(before['cursor']['y'])) + "' style='fill:red;stroke:gray;stroke-width:0.1'/>")
-                    write_svg.write("</svg>")
-                    write_svg.close()
-                    if len(video_list)!=0:
-                      duration_list.append(round(duration,1)-0.1)
-                      duration=0.1
-                    video_list.append(write_svg_file)
-
-                  write_svg_file = temp_dir + "draw_" + str(time) + "2.svg"
+                  write_svg_file = temp_dir + "draw_" + str(time) + ".svg"
                   write_svg = open(write_svg_file, 'a+')
                   write_svg.write("<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' version='1.1' width='" + str(img['width']) + "' height='" + str(img['height']) + "'>")
                   if len(bild) >= 1:
