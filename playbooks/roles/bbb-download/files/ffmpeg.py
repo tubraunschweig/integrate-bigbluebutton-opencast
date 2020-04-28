@@ -71,7 +71,3 @@ def trim_video_start(dictionary, length, full_vid, video_trimmed):
 def mp3_to_aac(mp3_file, aac_file):
     command = '%s -i %s -c:a libfdk_aac %s 2>> %s' % (FFMPEG, mp3_file, aac_file, logfile)
     os.system(command)
-
-#def overlay_video(video_file1,ovelay_file,output_name):
-#    command = '%s -i %s -i %s -b:v 1M -filter_complex "[1:v]scale=320:180 [ovrl],  [0:v][ovrl]overlay= main_w - (overlay_w + 10) :  main_h-(overlay_h +10)" %s -y 2>> %s' % (FFMPEG,video_file1,ovelay_file,output_name,logfile)
-#    os.system(command)
