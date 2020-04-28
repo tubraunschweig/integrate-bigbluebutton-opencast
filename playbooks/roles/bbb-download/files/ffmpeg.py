@@ -62,30 +62,6 @@ def trim_video_by_seconds(video_file, start, end, out_file):
     os.system(command)
 
 
-def trim_audio(audio_file, start, end, out_file):
-    temp_file = 'temp.mp3'
-    start_h = start / 3600
-    start_m = start / 60 - start_h * 60
-    start_s = start % 60
-
-    end_h = end / 3600
-    end_m = end / 60 - end_h * 60
-    end_s = end % 60
-
-    str1 = '%d:%d:%d' % (start_h, start_m, start_s)
-    str2 = '%d:%d:%d' % (end_h, end_m, end_s)
-    command = '%s -ss %s -t %s -i %s %s 2>> %s' % (FFMPEG, str1, str2, audio_file, temp_file, logfile)
-    os.system(command)
-    mp3_to_aac(temp_file, out_file)
-    os.remove(temp_file)
-
-
-def trim_audio_start(dictionary, length, full_audio, audio_trimmed):
-    times = dictionary.keys()
-    times.sort()
-    trim_audio(full_audio, int(round(times[0])), int(length), audio_trimmed)
-
-
 def trim_video_start(dictionary, length, full_vid, video_trimmed):
     times = dictionary.keys()
     times.sort()

@@ -25,7 +25,6 @@ PATH = '/var/bigbluebutton/published/presentation/'
 LOGS = '/var/log/bigbluebutton/download/'
 source_dir = PATH + meetingId + "/"
 temp_dir = source_dir + 'temp/'
-target_dir = source_dir + 'download/'
 
 audio_path = temp_dir + 'audio/'
 events_file = 'shapes.svg'
@@ -81,7 +80,7 @@ def create_drawing(dims,result):
         print >> sys.stderr, "-=create_drawing=-"
         copy_mp4(SOURCE_DESKSHARE, TMP_DESKSHARE_FILE)
 
-        drawing_list = 'drawing_list.txt'
+        drawing_list = temp_dir + 'drawing_list.txt'
         f = open(drawing_list, 'w')
 
         tree = ET.parse(source_dir + 'cursor.xml')
@@ -204,9 +203,6 @@ def get_presentation_dims(presentation_name):
 
 
 def prepare(bbb_version):
-    if not os.path.exists(target_dir):
-        os.mkdir(target_dir)
-
     if not os.path.exists(temp_dir):
         os.mkdir(temp_dir)
 
@@ -253,9 +249,6 @@ def cleanup():
     if os.path.exists(temp_dir):
         shutil.rmtree(temp_dir)
 
-    if os.path.exists(target_dir):
-        shutil.rmtree(target_dir)
-
 def copy_mp4(result, dest):
     if os.path.exists(result):
         shutil.copy2(result, dest)
@@ -293,36 +286,20 @@ def main():
         if not video_exists(source_dir + '_presentation.mp4'):
             dictionary, length, dims = prepare(bbb_version)
             audio = audio_path + 'audio.ogg'
-            audio_trimmed = temp_dir + 'audio_trimmed.m4a'
-            result = target_dir + 'meeting.mp4'
+            result = source_dir + '_presentation.mp4'
             drawing = temp_dir + 'drawing.mp4'
             try:
                 print >> sys.stderr, "Creating presentation's .Mp4 video..."
                 print >> sys.stderr, "Drawing"
                 create_drawing(dims,drawing)
-                print >> sys.stderr, "audio"
-                ffmpeg.trim_audio_start(dictionary, length, audio, audio_trimmed)
                 print >> sys.stderr, "Slideshow + audio"
                 ffmpeg.mux_slideshow_audio(drawing, audio, result)
 
-                copy_mp4(result, source_dir + '_presentation.mp4')
                 print >> sys.stderr, "Presentation's Mp4 Creation Done"
             except:
                 print >> sys.stderr, "Presentation's Mp4 Creation Failed"
         else:
-            print >> sys.stderr, "Presentation record already exists: " + source_dir + '_presentation.mp4'
-        #if not video_exists(source_dir + '_overlayed.mp4'):
-        #    if (video_exists(source_dir + '_presentation.mp4') and video_exists(source_dir + 'video/webcams.mp4')):
-        #        try:
-        #            print >> sys.stderr, "Overlayig Presentation and webcams..."
-        #            ffmpeg.overlay_video(source_dir + '_presentation.mp4',source_dir + 'video/webcams.mp4',source_dir + '_overlayed.mp4')
-        #            print >> sys.stderr, "Overlaying is done"
-        #        except:
-        #            print >> sys.stderr, "Overlaying is Failed"
-        #    else:
-        #        print >> sys.stderr, "Overlaying is not possible"
-        #else:
-        #    print >> sys.stderr, "Webcam record already exists: "+ source_dir +"_overlayed.mp4"
+            print >> sys.stderr, "Presentation record already exists: " + result
     finally:
         print >> sys.stderr, "Cleaning up temp files..."
         cleanup()
