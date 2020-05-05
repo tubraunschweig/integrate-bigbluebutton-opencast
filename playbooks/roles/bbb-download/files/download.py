@@ -139,7 +139,7 @@ def create_drawing(dims,result):
                       bild.update({ draw['shape'] : '' })
 
                 if before != bild:
-                  write_svg_file = temp_dir + "draw_" + str(time) + ".svg"
+                  write_svg_file = temp_dir + "draw_" + str(time) + img['id'] + ".svg"
                   write_svg = open(write_svg_file, 'a+')
                   write_svg.write("<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' version='1.1' width='" + str(img['width']) + "' height='" + str(img['height']) + "'>")
                   if len(bild) >= 1:
