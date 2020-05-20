@@ -119,7 +119,7 @@ def create_drawing(dims, result):
             else:
                 background = "<image width='" + img['width'] + "' height='" + img['height'] + "' xlink:href='data:image/png;base64," + base64.b64encode(open(img['xlink:href'], "rb").read()) + "'/>"
                 bild.update({'background': background})
-                for time in numpy.arange(round(float(img['in']), 1), round(float(img['out']), 1) + 0.1, 0.1):
+                for time in numpy.arange(round(float(img['in']), 1), round(float(img['out']), 1), 0.1):
                     time = round(time, 1)
                     before = bild.copy()
                     if time in cursor:
@@ -156,7 +156,7 @@ def create_drawing(dims, result):
                         video_list.append(write_svg_file)
                     else:
                         duration = duration + 0.1
-                    if time == round(float(img['out']), 1):
+                    if time == round(float(img['out']) - 0.1, 1):
                         duration_list.append(round(duration, 1))
                         duration = 0.1
                 for i in range(0, len(video_list)):
