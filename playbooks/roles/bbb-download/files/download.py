@@ -32,54 +32,13 @@ events_file = 'shapes.svg'
 LOGFILE = LOGS + meetingId + '.log'
 ffmpeg.set_logfile(LOGFILE)
 source_events = '/var/bigbluebutton/recording/raw/' + meetingId + '/events.xml'
-# Deskshare
 SOURCE_DESKSHARE = source_dir + 'deskshare/deskshare.mp4'
 TMP_DESKSHARE_FILE = temp_dir + 'deskshare.mp4'
 
 
-def extract_timings(bbb_version):
-    doc = minidom.parse(events_file)
-    dictionary = {}
-    total_length = 0
-    j = 0
-
-    for image in doc.getElementsByTagName('image'):
-        path = image.getAttribute('xlink:href')
-
-        if j == 0 and '2.0.0' > bbb_version:
-            path = u'/usr/local/bigbluebutton/core/scripts/logo.png'
-            j += 1
-
-        in_times = str(image.getAttribute('in')).split(' ')
-        out_times = image.getAttribute('out').split(' ')
-
-        try:
-            temp = float(out_times[len(out_times) - 1])
-
-            if temp > total_length:
-                total_length = temp
-
-            occurrences = len(in_times)
-            for i in range(occurrences):
-                dictionary[float(in_times[i])] = temp_dir + str(path)
-
-        except:
-            print >> sys.stderr, "Exception extract_timings"
-            print >> sys.stderr, str(image.getAttribute('in')).split(' ')
-            print >> sys.stderr, str(image.getAttribute('out')).split(' ')
-            print >> sys.stderr, "occurrences"
-            print >> sys.stderr, occurrences
-            print >> sys.stderr, "dictionary"
-            print >> sys.stderr, dictionary
-            print >> sys.stderr, "total_length"
-            print >> sys.stderr, total_length
-
-    return dictionary, total_length
-
-
-def create_drawing(dims, result):
+def create_drawing(result):
     try:
-        print >> sys.stderr, "-=create_drawing=-"
+        print >> sys.stderr, "[" + meetingId + "]-=create_drawing=-"
         copy_mp4(SOURCE_DESKSHARE, TMP_DESKSHARE_FILE)
 
         drawing_list = temp_dir + 'drawing_list.txt'
@@ -112,6 +71,7 @@ def create_drawing(dims, result):
             video_list = []
             duration_list = []
             duration = 0.1
+            image_changed = False
             if "deskshare.png" in img['xlink:href']:
                 ffmpeg.trim_video_by_seconds(TMP_DESKSHARE_FILE, round(float(img['in']), 1), round(float(img['out']), 1) - round(float(img['in']), 1), temp_dir + "draw_" + str(img['id']) + ".mp4")
                 ffmpeg.mp4_to_ts(temp_dir + "draw_" + str(img['id']) + ".mp4", temp_dir + "draw_" + str(img['id']) + ".ts")
@@ -139,6 +99,7 @@ def create_drawing(dims, result):
                                     bild.update({draw['shape']: ''})
 
                     if before != bild:
+                        image_changed = True
                         write_svg_file = temp_dir + "draw_" + str(time) + img['id'] + ".svg"
                         write_svg = open(write_svg_file, 'a+')
                         write_svg.write("<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' version='1.1' width='" + str(img['width']) + "' height='" + str(img['height']) + "'>")
@@ -157,7 +118,13 @@ def create_drawing(dims, result):
                     else:
                         duration = duration + 0.1
                     if time == round(float(img['out']) - 0.1, 1):
-                        duration_list.append(round(duration, 1))
+                        if image_changed:
+                            if round(duration - 0.1, 1) == 0:
+                                del video_list[-1]
+                            else:
+                                duration_list.append(round(duration - 0.1, 1))
+                        else:
+                            duration_list.append(round(duration - 0.2, 1))
                         duration = 0.1
                 for i in range(0, len(video_list)):
                     ffmpeg.create_video_from_image(video_list[i], round(float(duration_list[i]), 1), video_list[i] + ".ts")
@@ -167,23 +134,10 @@ def create_drawing(dims, result):
         os.remove(drawing_list)
     except Exception, e:
         print(e)
-        print >> sys.stderr, "Exception create_drawing"
+        print >> sys.stderr, "[" + meetingId + "]Exception create_drawing"
 
 
-def get_presentation_dims(presentation_name):
-    doc = minidom.parse(events_file)
-    images = doc.getElementsByTagName('image')
-
-    for el in images:
-        name = el.getAttribute('xlink:href')
-        pattern = presentation_name
-        if re.search(pattern, name):
-            height = int(el.getAttribute('height'))
-            width = int(el.getAttribute('width'))
-            return height, width
-
-
-def prepare(bbb_version):
+def prepare():
     if not os.path.exists(temp_dir):
         os.mkdir(temp_dir)
 
@@ -198,36 +152,6 @@ def prepare(bbb_version):
         webcams_found.close()
 
     shutil.copytree("presentation", temp_dir + "presentation")
-    dictionary, length = extract_timings(bbb_version)
-    # debug
-    print >> sys.stderr, "dictionary"
-    print >> sys.stderr, (dictionary)
-    print >> sys.stderr, "length"
-    print >> sys.stderr, (length)
-    dims = get_different_presentations(dictionary)
-    # debug
-    print >> sys.stderr, "dims"
-    print >> sys.stderr, (dims)
-    return dictionary, length, dims
-
-
-def get_different_presentations(dictionary):
-    times = dictionary.keys()
-    print >> sys.stderr, "times"
-    print >> sys.stderr, (times)
-    presentations = []
-    dims = {}
-    for t in times:
-
-        name = dictionary[t].split("/")[7]
-        # debug
-        print >> sys.stderr, "name"
-        print >> sys.stderr, (name)
-        if name not in presentations:
-            presentations.append(name)
-            dims[name] = get_presentation_dims(name)
-
-    return dims
 
 
 def cleanup():
@@ -253,46 +177,33 @@ def zipdir(path):
     zipf.close()
 
 
-def bbbversion():
-    global bbb_ver
-    bbb_ver = 0
-    s_events = minidom.parse(source_events)
-    for event in s_events.getElementsByTagName('recording'):
-        bbb_ver = event.getAttribute('bbb_version')
-    return bbb_ver
-
-
 def main():
     sys.stderr = open(LOGFILE, 'a')
-    print >> sys.stderr, "\n<-------------------" + time.strftime("%c") + "----------------------->\n"
-
-    bbb_version = bbbversion()
-    print >> sys.stderr, "bbb_version: " + bbb_version
 
     os.chdir(source_dir)
-    print >> sys.stderr, "Verifying record"
+    print >> sys.stderr, "[" + meetingId + "]Verifying record"
     try:
         if not video_exists(source_dir + '_presentation.mp4'):
-            dictionary, length, dims = prepare(bbb_version)
+            prepare()
             audio = audio_path + 'audio.ogg'
             result = source_dir + '_presentation.mp4'
             drawing = temp_dir + 'drawing.mp4'
             try:
-                print >> sys.stderr, "Creating presentation's .Mp4 video..."
-                print >> sys.stderr, "Drawing"
-                create_drawing(dims, drawing)
-                print >> sys.stderr, "Slideshow + audio"
+                print >> sys.stderr, "[" + meetingId + "]Creating presentation's .Mp4 video..."
+                print >> sys.stderr, "[" + meetingId + "]Drawing"
+                create_drawing(drawing)
+                print >> sys.stderr, "[" + meetingId + "]Slideshow + audio"
                 ffmpeg.mux_slideshow_audio(drawing, audio, result)
 
-                print >> sys.stderr, "Presentation's Mp4 Creation Done"
+                print >> sys.stderr, "[" + meetingId + "]Presentation's Mp4 Creation Done"
             except:
-                print >> sys.stderr, "Presentation's Mp4 Creation Failed"
+                print >> sys.stderr, "[" + meetingId + "]Presentation's Mp4 Creation Failed"
         else:
-            print >> sys.stderr, "Presentation record already exists: " + result
+            print >> sys.stderr, "[" + meetingId + "]Presentation record already exists: " + result
     finally:
-        print >> sys.stderr, "Cleaning up temp files..."
+        print >> sys.stderr, "[" + meetingId + "]Cleaning up temp files..."
         cleanup()
-        print >> sys.stderr, "Process finished"
+        print >> sys.stderr, "[" + meetingId + "]Process finished"
 
 
 if __name__ == "__main__":

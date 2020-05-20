@@ -78,26 +78,26 @@ if(download_status)
   oc_user = Shellwords.escape(oc_user)
 
   if (File.exists?(published_files + '/video/webcams.mp4')  && File.exists?(published_files + '/video/webcams.found'))
-    BigBlueButton.logger.info("Found presenter video")
+    BigBlueButton.logger.info("[#{meeting_id}]Found presenter video")
     ingest = true
     presenter = "-F 'flavor=presenter/source' -F 'BODY1=@#{published_files + '/video/webcams.mp4'}'"
   end
   if (File.exists?(published_files + '/_presentation.mp4'))
-    BigBlueButton.logger.info("Found _presentation video")
+    BigBlueButton.logger.info("[#{meeting_id}]Found _presentation video")
     ingest = true
     presentation = "-F 'flavor=presentation/source' -F 'BODY2=@#{published_files + '/_presentation.mp4'}'"
   elsif (File.exists?(published_files + '/deskshare/deskshare.mp4'))
-    BigBlueButton.logger.info("Found presentation video")
+    BigBlueButton.logger.info("[#{meeting_id}]Found deskshare video")
     ingest = true
     presentation = "-F 'flavor=presentation/source' -F 'BODY2=@#{published_files + '/deskshare/deskshare.mp4'}'"
   end
   if (ingest && upload)
-    BigBlueButton.logger.info("Uploading...")
+    BigBlueButton.logger.info("#{meeting_id}]Uploading...")
     puts `curl -u '#{oc_user}' "#{oc_server}/ingest/addMediaPackage/#{oc_workflow}" #{presenter} #{presentation} -F creator="#{ocpresenter}" -F title="#{title}" -F subject="#{octitle}" -F seriesDCCatalogUri="#{oc_server}/series/#{ocseries}.xml"`
   end
-  BigBlueButton.logger.info("Upload for [#{meeting_id}] ends")
+  BigBlueButton.logger.info("[#{meeting_id}]Upload for ends")
 else
-  BigBlueButton.logger.info("Opencast Upload not possibly [#{meeting_id}]")
+  BigBlueButton.logger.info("[#{meeting_id}]Opencast Upload not possibly")
 end
 
 exit 0
