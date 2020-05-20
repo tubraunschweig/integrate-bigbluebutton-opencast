@@ -77,7 +77,7 @@ if(download_status)
   end
   oc_user = Shellwords.escape(oc_user)
 
-  if (File.exists?(published_files + '/video/webcams.mp4'))
+  if (File.exists?(published_files + '/video/webcams.mp4')  && File.exists?(published_files + '/video/webcams.found'))
     BigBlueButton.logger.info("Found presenter video")
     ingest = true
     presenter = "-F 'flavor=presenter/source' -F 'BODY1=@#{published_files + '/video/webcams.mp4'}'"

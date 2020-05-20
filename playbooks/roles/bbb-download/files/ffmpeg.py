@@ -17,7 +17,7 @@ def mux_slideshow_audio(video_file, audio_file, out_file):
 
 
 def extract_audio_from_video(video_file, out_file):
-    command = '%s -i %s -ab 160k -ac 2 -ar 44100 -vn %s 2>> %s' % (FFMPEG, video_file, out_file, logfile)
+    command = '%s -i %s -ab 160k -ac 2 -ar 48000 -vn %s 2>> %s' % (FFMPEG, video_file, out_file, logfile)
     os.system(command)
 
 
