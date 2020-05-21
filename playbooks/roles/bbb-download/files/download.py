@@ -71,7 +71,7 @@ def create_drawing(result):
             video_list = []
             duration_list = []
             duration = 0.1
-            image_changed = False
+            image_not_changed = True
             if "deskshare.png" in img['xlink:href']:
                 ffmpeg.trim_video_by_seconds(TMP_DESKSHARE_FILE, round(float(img['in']), 1), round(float(img['out']), 1) - round(float(img['in']), 1), temp_dir + "draw_" + str(img['id']) + ".mp4")
                 ffmpeg.mp4_to_ts(temp_dir + "draw_" + str(img['id']) + ".mp4", temp_dir + "draw_" + str(img['id']) + ".ts")
@@ -79,7 +79,7 @@ def create_drawing(result):
             else:
                 background = "<image width='" + img['width'] + "' height='" + img['height'] + "' xlink:href='data:image/png;base64," + base64.b64encode(open(img['xlink:href'], "rb").read()) + "'/>"
                 bild.update({'background': background})
-                for time in numpy.arange(round(float(img['in']), 1), round(float(img['out']), 1), 0.1):
+                for time in numpy.arange(round(float(img['in']), 1), round(float(img['out']) + 0.1, 1), 0.1):
                     time = round(time, 1)
                     before = bild.copy()
                     if time in cursor:
@@ -99,7 +99,7 @@ def create_drawing(result):
                                     bild.update({draw['shape']: ''})
 
                     if before != bild:
-                        image_changed = True
+                        image_not_changed = False
                         write_svg_file = temp_dir + "draw_" + str(time) + img['id'] + ".svg"
                         write_svg = open(write_svg_file, 'a+')
                         write_svg.write("<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' version='1.1' width='" + str(img['width']) + "' height='" + str(img['height']) + "'>")
@@ -117,14 +117,21 @@ def create_drawing(result):
                         video_list.append(write_svg_file)
                     else:
                         duration = duration + 0.1
-                    if time == round(float(img['out']) - 0.1, 1):
-                        if image_changed:
-                            if round(duration - 0.1, 1) == 0:
-                                del video_list[-1]
-                            else:
-                                duration_list.append(round(duration - 0.1, 1))
-                        else:
-                            duration_list.append(round(duration - 0.2, 1))
+                    if time == round(float(img['out']), 1):
+                        if image_not_changed:
+                            write_svg_file = temp_dir + "draw_" + str(time) + img['id'] + ".svg"
+                            write_svg = open(write_svg_file, 'a+')
+                            write_svg.write("<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' version='1.1' width='" + str(img['width']) + "' height='" + str(img['height']) + "'>")
+                            if len(bild) >= 1:
+                                for k, v in bild.items():
+                                    if v and k != 'cursor':
+                                        write_svg.write(v)
+                            if 'cursor' in bild:
+                                write_svg.write("<circle r='8' cx='" + str(int(img['width']) * float(bild['cursor']['x'])) + "' cy='" + str(int(img['height']) * float(bild['cursor']['y'])) + "' style='fill:red;stroke:gray;stroke-width:0.1'/>")
+                            write_svg.write("</svg>")
+                            write_svg.close()
+                            video_list.append(write_svg_file)
+                        duration_list.append(round(duration - 0.1, 1))
                         duration = 0.1
                 for i in range(0, len(video_list)):
                     ffmpeg.create_video_from_image(video_list[i], round(float(duration_list[i]), 1), video_list[i] + ".ts")
