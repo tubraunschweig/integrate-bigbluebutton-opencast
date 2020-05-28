@@ -79,7 +79,7 @@ def create_drawing(result):
             else:
                 background = "<image width='" + img['width'] + "' height='" + img['height'] + "' xlink:href='data:image/png;base64," + base64.b64encode(open(img['xlink:href'], "rb").read()) + "'/>"
                 bild.update({'background': background})
-                for time in numpy.arange(round(float(img['in']), 1), round(float(img['out']) + 0.1, 1), 0.1):
+                for time in numpy.arange(round(float(img['in']), 1), round(float(img['out']), 1), 0.1):
                     time = round(time, 1)
                     before = bild.copy()
                     if time in cursor:
@@ -117,8 +117,8 @@ def create_drawing(result):
                         video_list.append(write_svg_file)
                     else:
                         duration = duration + 0.1
-                    if time == round(float(img['out']), 1):
-                        if image_not_changed and round(duration - 0.1, 1) > 0:
+                    if time == round(float(img['out'])-0.1, 1):
+                        if image_not_changed:
                             write_svg_file = temp_dir + "draw_" + str(time) + img['id'] + ".svg"
                             write_svg = open(write_svg_file, 'a+')
                             write_svg.write("<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' version='1.1' width='" + str(img['width']) + "' height='" + str(img['height']) + "'>")
@@ -131,7 +131,7 @@ def create_drawing(result):
                             write_svg.write("</svg>")
                             write_svg.close()
                             video_list.append(write_svg_file)
-                        duration_list.append(round(duration - 0.1, 1))
+                        duration_list.append(round(duration, 1))
                         duration = 0.1
                 for i in range(0, len(video_list)):
                     ffmpeg.create_video_from_image(video_list[i], round(float(duration_list[i]), 1), video_list[i] + ".ts")
