@@ -12,7 +12,7 @@ def set_logfile(file):
 
 
 def mux_slideshow_audio(video_file, audio_file, out_file):
-    command = '%s -i %s -i %s -map 0 -map 1 -codec copy -shortest %s 2>> %s' % (FFMPEG, video_file, audio_file, out_file, logfile)
+    command = '%s -i %s -i %s -map 0 -map 1 -c:v copy -c:a aac -shortest %s 2>> %s' % (FFMPEG, video_file, audio_file, out_file, logfile)
     os.system(command)
 
 
