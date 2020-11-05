@@ -34,6 +34,9 @@ def mp4_to_ts(input, output):
     command = '%s -i %s -c copy -bsf:v h264_mp4toannexb -f mpegts %s 2>> %s' % (FFMPEG, input, output, logfile)
     os.system(command)
 
+def webm_to_mp4(webm_file, mp4_file):
+    command = '%s -i %s -r 24 -qscale 0 -vf "scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2" %s 2>> %s' % (FFMPEG, webm_file, mp4_file, logfile)
+    os.system(command)
 
 def concat_ts_videos(input, output):
     command = '%s -i %s -c copy -bsf:a aac_adtstoasc %s 2>> %s' % (FFMPEG, input, output, logfile)

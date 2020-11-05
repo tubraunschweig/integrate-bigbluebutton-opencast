@@ -24,16 +24,6 @@ This Integration for Opencast is a further development of https://weblog.lkiesow
 4. Your BigBlueButton creates MP4 Videos
 5. A lot of Diskspace for temporary files
 
-## Installation
-
-(Still room for improvement)
-
-1. Check your environment for compatibility with this Integration.
-2. Replace the ocseries in download_control.rb at line 56 with your default Opencast Series.
-3. Edit the Opencast Settings in download_control.rb starting at line 31.
-4. Install the integration with your Ansbile playbook.
-5. It is possible that the Ansible Role Fails at the first time.
-
 ## Usage
 
 (Still room for improvement)

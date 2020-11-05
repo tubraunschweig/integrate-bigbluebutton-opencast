@@ -31,14 +31,26 @@ audio_path = temp_dir + 'audio/'
 events_file = 'shapes.svg'
 LOGFILE = LOGS + meetingId + '.log'
 ffmpeg.set_logfile(LOGFILE)
-source_events = '/var/bigbluebutton/recording/raw/' + meetingId + '/events.xml'
+raw_path = '/var/bigbluebutton/recording/raw/'
+raw_deskshare_path = raw_path + meetingId + '/deskshare'
+source_events = raw_path + meetingId + '/events.xml'
 SOURCE_DESKSHARE = source_dir + 'deskshare/deskshare.mp4'
 TMP_DESKSHARE_FILE = temp_dir + 'deskshare.mp4'
-
+TMP_DESKSHARE_PATH = temp_dir + 'deskshare/'
 
 def create_drawing(result):
     try:
         print >> sys.stderr, "[" + meetingId + "]-=create_drawing=-"
+        deskshare_source_videos=[]
+        deskshare_source_videos_dict={}
+        shutil.copytree(raw_deskshare_path, TMP_DESKSHARE_PATH)
+
+        for file in os.listdir(TMP_DESKSHARE_PATH):
+            deskshare_source_videos.append(file.split('-')[1])
+            deskshare_source_videos_dict[file.split('-')[1]]=file
+
+        deskshare_source_videos.sort()
+
         copy_mp4(SOURCE_DESKSHARE, TMP_DESKSHARE_FILE)
 
         drawing_list = temp_dir + 'drawing_list.txt'
@@ -73,9 +85,28 @@ def create_drawing(result):
             duration = 0.1
             image_not_changed = True
             if "deskshare.png" in img['xlink:href']:
-                ffmpeg.trim_video_by_seconds(TMP_DESKSHARE_FILE, round(float(img['in']), 1), round(float(img['out']), 1) - round(float(img['in']), 1), temp_dir + "draw_" + str(img['id']) + ".mp4")
-                ffmpeg.mp4_to_ts(temp_dir + "draw_" + str(img['id']) + ".mp4", temp_dir + "draw_" + str(img['id']) + ".ts")
-                f.write('file ' + temp_dir + "draw_" + str(img['id']) + ".ts" + '\n')
+                if len(deskshare_source_videos) != 0:
+                    video_id=deskshare_source_videos[0]
+                    deskshare_source_videos.pop(0)
+                    video_file=deskshare_source_videos_dict[video_id]
+                    dst_video_file=str(img['id']) + video_id
+                    duration_desk=round(round(float(img['out']), 1) - round(float(img['in'])))
+                    ffmpeg.webm_to_mp4(TMP_DESKSHARE_PATH + video_file, TMP_DESKSHARE_PATH + dst_video_file + '.mp4')
+
+                    ffmpeg.trim_video_by_seconds(TMP_DESKSHARE_PATH + dst_video_file + '.mp4', 0, duration_desk, temp_dir + "draw_" + str(img['id']) + "_" + str(duration_desk) + ".mp4")
+                    ffmpeg.mp4_to_ts(temp_dir + "draw_" + str(img['id']) + "_" + str(duration_desk) + ".mp4", temp_dir + "draw_" + str(img['id']) + "_" + str(duration_desk) + ".ts")
+                    f.write('file ' + temp_dir + "draw_" + str(img['id']) + "_" + str(duration_desk) + ".ts" + '\n')
+
+                    os.remove(temp_dir + "draw_" + str(img['id']) + "_" + str(duration_desk) + ".mp4")
+                    os.remove(TMP_DESKSHARE_PATH + video_file)
+                    os.remove(TMP_DESKSHARE_PATH + dst_video_file + '.mp4')
+                else:
+                    start_desk=round(float(img['out']), 1)
+                    duration_desk=round(round(float(img['out']), 1) - round(float(img['in'])))
+                    ffmpeg.trim_video_by_seconds(TMP_DESKSHARE_FILE, start_desk, duration_desk, temp_dir + "draw_" + str(img['id']) + "_" + str(start_desk) + "_" + str(duration_desk) + ".mp4")
+                    ffmpeg.mp4_to_ts(temp_dir + "draw_" + str(img['id']) + "_" + str(start_desk) + "_" + str(duration_time_desk) + ".mp4", temp_dir + "draw_" + str(img['id']) + "_" + str(start_desk) + "_" + str(duration_desk) + ".ts")
+                    f.write('file ' + temp_dir + "draw_" + str(img['id']) + "_" + str(start_desk) + "_" + str(duration_desk) + ".ts" + '\n')
+                    os.remove(temp_dir + "draw_" + str(img['id']) + "_" + str(start_desk) + "_" + str(duration_desk) + ".mp4")
             else:
                 background = "<image width='" + img['width'] + "' height='" + img['height'] + "' xlink:href='data:image/png;base64," + base64.b64encode(open(img['xlink:href'], "rb").read()) + "'/>"
                 bild.update({'background': background})
@@ -136,6 +167,7 @@ def create_drawing(result):
                 for i in range(0, len(video_list)):
                     ffmpeg.create_video_from_image(video_list[i], round(float(duration_list[i]), 1), video_list[i] + ".ts")
                     f.write('file ' + video_list[i] + ".ts" + '\n')
+                    os.remove(video_list[i])
         f.close()
         ffmpeg.concat_videos(drawing_list, result)
         os.remove(drawing_list)
@@ -206,7 +238,7 @@ def main():
             except:
                 print >> sys.stderr, "[" + meetingId + "]Presentation's Mp4 Creation Failed"
         else:
-            print >> sys.stderr, "[" + meetingId + "]Presentation record already exists: " + result
+            print >> sys.stderr, "[" + meetingId + "]Presentation record already exists"
     finally:
         print >> sys.stderr, "[" + meetingId + "]Cleaning up temp files..."
         cleanup()
